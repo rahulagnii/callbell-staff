@@ -105,7 +105,8 @@ const User = () => {
           >
             <Card>
               <List.Item extra="More" arrow="horizontal">
-                <strong>{`Table ${tableNo} ${event}`}</strong>
+                <strong>{`${tableNo} `}</strong>
+                {event}
               </List.Item>
             </Card>
           </SwipeAction>
