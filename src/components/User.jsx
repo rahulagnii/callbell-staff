@@ -104,7 +104,7 @@ const User = () => {
             ]}
           >
             <Card>
-              <List.Item extra="More" arrow="horizontal">
+              <List.Item arrow="horizontal">
                 <strong>{`${tableNo} `}</strong>
                 {event}
               </List.Item>
