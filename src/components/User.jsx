@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import firebase from "firebase/app";
 import "firebase/auth";
 import { navigate } from "@reach/router";
-import { message, Typography, notification } from "antd";
+import { Row, Col, Image, Typography, Card } from "antd";
 import { LogoutOutlined } from "@ant-design/icons";
-import { NavBar, SwipeAction, List, Card } from "antd-mobile";
+import { SwipeAction, List } from "antd-mobile";
 import useSound from "use-sound";
 import beep from "../beep.wav";
 import db from "../firebase";
+import logo from "../bell.png";
 
 const User = () => {
   const auth = firebase.auth();
@@ -25,18 +26,18 @@ const User = () => {
   const getNotification = () => {
     db.collection("notifications")
       .orderBy("created", "desc")
-      .onSnapshot((snapshot) => {
-        snapshot.docChanges().map((value) => {
-          if (value.type === "added" || value.type === "modified") {
-            notification.warning({
-              message: `Table No ${value.doc.data().tableNo}`,
-              description: `${value.doc.data().event}`,
-              placement: "bottomRight",
-            });
-          }
-          return null;
-        });
-        setNotify(snapshot.docs.map((doc) => doc.data()));
+      .onSnapshot(({ docs }) => {
+        // snapshot.docChanges().map((value) => {
+        //   if (value.type === "added" || value.type === "modified") {
+        //     notification.warning({
+        //       message: `Table No ${value.doc.data().tableNo}`,
+        //       description: `${value.doc.data().event}`,
+        //       placement: "bottomRight",
+        //     });
+        //   }
+        //   return null;
+        // });
+        setNotify(docs.map((doc) => doc.data()));
       });
   };
 
@@ -50,25 +51,9 @@ const User = () => {
       db.collection("notifications").doc(`waiter${tableNo}`).delete();
       db.collection("notifications").doc(`sugar${tableNo}`).delete();
       db.collection("notifications").doc(`water${tableNo}`).delete();
-      db.collection("tables")
-        .doc(tableNo)
-        .delete()
-        .then(() => {
-          message.success("Task successfully deleted!");
-        })
-        .catch((error) => {
-          message.success(`Error removing task: , ${error}`);
-        });
+      db.collection("tables").doc(tableNo).delete();
     } else {
-      db.collection("notifications")
-        .doc(id)
-        .delete()
-        .then(() => {
-          message.success("Task successfully deleted!");
-        })
-        .catch((error) => {
-          message.success(`Error removing task: , ${error}`);
-        });
+      db.collection("notifications").doc(id).delete();
     }
   };
 
@@ -79,62 +64,53 @@ const User = () => {
   }, [notify]);
 
   return (
-    <div>
-      <NavBar
-        mode="light"
-        style={{ padding: "40px 5px" }}
-        rightContent={
+    <div className="container center">
+      <Row>
+        <Col span={22}>
+          <Image width={50} src={logo} style={{ marginTop: 5 }} />
+          <Title style={{ color: "white" }} level={2}>
+            Call Bell
+          </Title>
+        </Col>
+        <Col span={2}>
           <LogoutOutlined
-            style={{ fontSize: "25px", fontWeight: "bold", color: "red" }}
+            style={{
+              fontSize: "25px",
+              fontWeight: "bold",
+              color: "red",
+              marginTop: 30,
+            }}
             onClick={signOut}
           />
-        }
-      >
-        <Title>Call Bell</Title>
-      </NavBar>
-      <List style={{ marginTop: "20px" }} className="container">
-        {notify.map(({ tableNo, event, id }) => {
-          return (
-            <SwipeAction
-              style={{
-                width: "100%",
-                height: "150px",
-              }}
-              autoClose
-              right={[
-                {
-                  text: "Close",
-                  onPress: () => taskCompleted(id, event, tableNo),
-                  style: {
-                    backgroundColor: "#F4333C",
-                    color: "white",
-                    width: "100px",
-                  },
+        </Col>
+      </Row>
+      {notify.map(({ tableNo, event, id }) => {
+        return (
+          <SwipeAction
+            style={{
+              width: "100%",
+            }}
+            autoClose
+            right={[
+              {
+                text: "Close",
+                onPress: () => taskCompleted(id, event, tableNo),
+                style: {
+                  backgroundColor: "#F4333C",
+                  color: "white",
+                  width: "100px",
                 },
-              ]}
-            >
-              <List.Item
-                style={{
-                  height: "150px",
-                  padding: "1px",
-                }}
-                extra="More"
-                arrow="horizontal"
-              >
-                <Card style={{ height: "150px" }}>
-                  <Card.Header
-                    title={`Table No. ${tableNo}`}
-                    style={{ fontSize: "20px", fontWeight: "bold" }}
-                  />
-                  <Card.Body className="task">
-                    <div>{event}</div>
-                  </Card.Body>
-                </Card>
+              },
+            ]}
+          >
+            <Card>
+              <List.Item extra="More" arrow="horizontal">
+                <strong>{`Table ${tableNo} ${event}`}</strong>
               </List.Item>
-            </SwipeAction>
-          );
-        })}
-      </List>
+            </Card>
+          </SwipeAction>
+        );
+      })}
     </div>
   );
 };
